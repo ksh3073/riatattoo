@@ -1,5 +1,5 @@
 {::nomarkdown}
 
-<div>asdf</div>
+<div style="color:red;">asdf</div>
 
 {:/}
