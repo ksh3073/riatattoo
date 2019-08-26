@@ -1,1 +1,23 @@
-Hello
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/gh/stevenschobert/instafeed.js/instafeed.min.js"></script>
+</head>
+
+<body>
+
+    <script type="text/javascript">
+        var feed = new Instafeed({
+            get: 'user',
+            resolution: 'low_resolution',
+            userId: '3059698035',
+            limit: '10',
+            accessToken: '3059698035.5c08b06.26ef90d5b88f465b83c0206ec1805024',
+            template: '<a href="{{link}}" target="_blank"><img src="{{image}}"></a>'
+        });
+        feed.run();
+    </script>
+    <div id="instafeed"></div>
+</body>
+
+</html>
