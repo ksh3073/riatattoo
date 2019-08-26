@@ -1,5 +1,5 @@
-{::nomarkdown}
-
-<div style="color:red;">asdf</div>
-
-{:/}
+<pre>
+    <code>
+        Whatever code you want to show
+    </code>
+</pre>
