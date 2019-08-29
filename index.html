@@ -6,7 +6,8 @@
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi">
 
   <link href="https://fonts.googleapis.com/css?family=Inconsolata|Pompiere&display=swap" rel="stylesheet">
-  
+
+
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 
@@ -19,12 +20,14 @@
     body {
       margin: 0px;
     }
+
     .form_info {
       border: 0px;
       padding: 10px;
       font-size: 20px;
       font-family: 'Inconsolata', monospace;
     }
+
     .fmi {
       border: 1px solid #aaa;
       width: 100%;
@@ -32,10 +35,11 @@
       padding: 20px;
       margin-top: 2px;
     }
+
     .toplogo {
       font-family: 'Pompiere', cursive;
-      
     }
+
     .nav {
       background: yellow;
     }
@@ -344,6 +348,7 @@
 <body>
 
   <script type="text/javascript">
+    let use_insta = false;
     let menu_ev = {
       Works: () => {
         $('#nav-icon3').click();
@@ -363,18 +368,93 @@
         console.log(123);
       },
     };
+    let col_num = 3;
     let img_keys = {};
     let page_name = '';
     let feed = {};
     let loading_lock = {};
     let menu_toggle = true;
     let menu_toggle_lock = false;
+    function get_container_width(name, div) {
+      let current = $('#' + name);
+      let padding = Number(current.css('padding').replace(/[^-\d\.]/g, ''));
+      let size = (current.outerWidth() - (padding * 2)) / div;
+      return size;
+    }
+
+    let page_cnt = {
+      list_works: {
+        key: 'riaworks',
+        reached_bottom: false,
+        cnt: 0
+      },
+      list_designs: {
+        key: 'riatattoo',
+        reached_bottom: false,
+        cnt: 0
+      },
+    };
+    let img_loading_lock = false;
+    function load_img_list(name) {
+      if (!img_loading_lock) {
+        if (!page_cnt[page_name].reached_bottom) {
+          img_loading_lock = true;
+          let current = $('#' + name);
+          let size = get_container_width(name, col_num);
+          let dsd = (col_num * Math.ceil(document.body.clientHeight / size));
+          current.css({ width: size * col_num });
+          $.ajax({
+            type: 'GET',
+            cache: false,
+            url: 'https://dev.noda.me/tistorycdn/?mode=list&user_id=' + page_cnt[page_name].key + '&page=' + page_cnt[page_name].cnt + '&showline=' + dsd,
+            beforeSend: function () {
+            },
+            success: function (data, textStatus, jqXHR) {
+              let end = data.list.length === 0;
+              data.list.forEach(itm => {
+                let cont = $('<div />').css({ display: 'inline' });
+                let loading = $('<div />').css({ display: 'inline' });
+                loading.append($('<img />').attr({}).css({ width: size + 'px', height: size + 'px', background: '#ddd' }));
+                let contim = $('<div />').css({ display: 'none' });
+                let img = $('<img />').attr({ src: itm.url + '' }).css({ width: size + 'px', height: size + 'px' });
+                img.on('load', function () {
+                  loading.css({ display: 'none' });
+                  contim.css({ display: 'inline' });
+                });
+                img.on('error', function () {
+                  loading.css({ display: 'none' });
+                  contim.css({ display: 'none' });
+                });
+                cont.append(loading);
+                cont.append(contim);
+                contim.append(img);
+                current.append(cont);
+              });
+              page_cnt[page_name].reached_bottom = end;
+              page_cnt[page_name].cnt++;
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+            },
+            complete: function () {
+              img_loading_lock = false;
+              $(window).trigger('scroll');
+            }
+          });
+        } else {
+          console.log(name + ' 에서는 다불렀다');
+        }
+      }
+    }
     function open_page(name) {
       page_name = name;
       $('.norm_pages').css({ display: 'none' });
       let current = $('#' + name);
       current.css({ display: '' });
-      if (!feed[name] && document.getElementById('data_' + name)) {
+      if (!use_insta) {
+        // console.log(page_name);
+        load_img_list(name);
+      }
+      if (!feed[name] && document.getElementById('data_' + name) && use_insta) {
         loading_lock[name] = true;
         feed[name] = new Instafeed({
           get: 'user',
@@ -387,12 +467,12 @@
                 cnew.push(fe);
               }
             });
-            let padding = Number(current.css('padding').replace(/[^-\d\.]/g, ''));
-            let size = (current.outerWidth() - (padding * 2)) / 3;
+            // let padding = Number(current.css('padding').replace(/[^-\d\.]/g, ''));
+            // let size = (current.outerWidth() - (padding * 2)) / 3;
             cnew.forEach(img_info => {
               let img_ = $('<img/>');
               img_.attr({ src: img_info.image });
-              img_.css({ width: size });
+              img_.css({ width: get_container_width(name, col_num) });
               current.append(img_);
             });
             loading_lock[name] = false;
@@ -447,11 +527,14 @@
       }
       $(window).on('scroll', function (e) {
         if ($(document).scrollTop() + document.body.clientHeight >= $(document).outerHeight() - 5) {
-          if (feed[page_name]) {
-            if (!loading_lock[name] && feed[page_name].hasNext()) {
-              feed[page_name].next();
+          if (!use_insta) {
+            load_img_list(page_name);
+          } else {
+            if (feed[page_name]) {
+              if (!loading_lock[name] && feed[page_name].hasNext()) {
+                feed[page_name].next();
+              }
             }
-
           }
         }
 
@@ -486,8 +569,8 @@
           });
         }
       });
-      open_page('list_works');
-      // open_page('list_designs');
+      // open_page('list_works');
+      open_page('list_designs');
       // open_page('contact_page');
     });
 
@@ -514,7 +597,7 @@
   <div class='norm_pages' id='list_designs'> </div>
   <div class='norm_pages' id='contact_page'>
     <div class='form_info'>
-      Please leave me a message and I'll reply you in order. Thank you for your patience!:)
+      Leave detail of you want to ask with your email
     </div>
     <input class='fmi' type='text' placeholder="E-mail Address" />
     <textarea class='fmi' placeholder="Detail"></textarea>
