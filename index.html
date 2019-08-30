@@ -1,4 +1,3 @@
-
 <html>
 
 <head>
@@ -8,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css?family=Inconsolata|Pompiere&display=swap" rel="stylesheet">
 
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
     integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -424,6 +424,7 @@
                   let size = get_container_width(name, 1);
                   let img = $('<img />').attr({ src: itm.url + '' }).css({ width: size + 'px', height: size + 'px' });
                   // let vsim = $();
+                  $('#choose_img').html('');
                   $('#choose_img').append(img);
                   scrollTo(0, 0);
                 });
@@ -587,27 +588,32 @@
       // open_page('contact_page');
     });
     function submit_form() {
-      $.ajax({
-        type: 'POST',
-        data: {
-          data: JSON.stringify(get_form())
-        },
-        cache: false,
-        url: 'https://dev.noda.me/riatattoomail/?mode=mail',
-        beforeSend: function () {
-        },
-        success: function (data, textStatus, jqXHR) {
-          // kx.ended = data.list.length === 0;
-          console.log(data);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-        },
-        complete: function () {
-          // kx.loading_lock = false;
-          // $(window).trigger('scroll');
-        }
-      });
-
+      if (!kx.mailing) {
+        kx.mailing = true;
+        $.ajax({
+          type: 'POST',
+          data: {
+            data: JSON.stringify(get_form())
+          },
+          cache: false,
+          url: 'https://dev.noda.me/riatattoomail/?mode=mail',
+          beforeSend: function () {
+          },
+          success: function (data, textStatus, jqXHR) {
+            // kx.ended = data.list.length === 0;
+            console.log(data);
+            swal("Sent your message!", "I'll reply you in order soon", "success");
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            swal("Sending failed", "T_T", "error");
+          },
+          complete: function () {
+            kx.mailing = false;
+            // kx.loading_lock = false;
+            // $(window).trigger('scroll');
+          }
+        });
+      }
     };
     function get_form() {
       if (true) {
