@@ -1,3 +1,4 @@
+
 <html>
 
 <head>
@@ -368,7 +369,7 @@
         console.log(123);
       },
     };
-    let col_num = 3;
+    let col_num = 1;
     let img_keys = {};
     let page_name = '';
     let feed = {};
@@ -396,8 +397,9 @@
     };
     let img_loading_lock = false;
     function load_img_list(name) {
+      // console.log('load_img_list', page_cnt[page_name]);
       if (!img_loading_lock) {
-        if (!page_cnt[page_name].reached_bottom) {
+        if (page_cnt[page_name] && !page_cnt[page_name].reached_bottom) {
           img_loading_lock = true;
           let current = $('#' + name);
           let size = get_container_width(name, col_num);
@@ -417,6 +419,14 @@
                 loading.append($('<img />').attr({}).css({ width: size + 'px', height: size + 'px', background: '#ddd' }));
                 let contim = $('<div />').css({ display: 'none' });
                 let img = $('<img />').attr({ src: itm.url + '' }).css({ width: size + 'px', height: size + 'px' });
+                img.on('click', function () {
+                  open_page('contact_page');
+                  let size = get_container_width(name, 1);
+                  let img = $('<img />').attr({ src: itm.url + '' }).css({ width: size + 'px', height: size + 'px' });
+                  // let vsim = $();
+                  $('#choose_img').append(img);
+                  scrollTo(0, 0);
+                });
                 img.on('load', function () {
                   loading.css({ display: 'none' });
                   contim.css({ display: 'inline' });
@@ -525,6 +535,9 @@
           })
         });
       }
+      $('#form_button').on('click', function (e) {
+        submit_form();
+      });
       $(window).on('scroll', function (e) {
         if ($(document).scrollTop() + document.body.clientHeight >= $(document).outerHeight() - 5) {
           if (!use_insta) {
@@ -573,6 +586,41 @@
       open_page('list_designs');
       // open_page('contact_page');
     });
+    function submit_form() {
+      $.ajax({
+        type: 'POST',
+        data: {
+          data: JSON.stringify(get_form())
+        },
+        cache: false,
+        url: 'https://dev.noda.me/riatattoomail/?mode=mail',
+        beforeSend: function () {
+        },
+        success: function (data, textStatus, jqXHR) {
+          // kx.ended = data.list.length === 0;
+          console.log(data);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+        },
+        complete: function () {
+          // kx.loading_lock = false;
+          // $(window).trigger('scroll');
+        }
+      });
+
+    };
+    function get_form() {
+      if (true) {
+        let few = $('#choose_img').children()[0];
+        few = few ? few.src : '';
+        return {
+          form_imgg: few,
+          form_name: $('#form_name').val(),
+          form_mail: $('#form_mail').val(),
+          form_body: $('#form_body').val(),
+        };
+      }
+    }
 
   </script>
 
@@ -597,11 +645,14 @@
   <div class='norm_pages' id='list_designs'> </div>
   <div class='norm_pages' id='contact_page'>
     <div class='form_info'>
-      Leave detail of you want to ask with your email
+      <!-- Leave detail of you want to ask with your email -->
+      Please leave me a message and I'll reply you in order. Thank you for your patience!:)
     </div>
-    <input class='fmi' type='text' placeholder="E-mail Address" />
-    <textarea class='fmi' placeholder="Detail"></textarea>
-    <input class='fmi' type='button' value='Submit' />
+    <div id="choose_img"></div>
+    <input class='fmi' id='form_name' type='text' placeholder="Name" />
+    <input class='fmi' id='form_mail' type='text' placeholder="E-mail Address" />
+    <textarea class='fmi' id='form_body' placeholder="Detail"></textarea>
+    <input class='fmi' id='form_button' type='button' value='Submit' />
   </div>
   <div style="display:none;">
     <div id='data_list_works'> </div>
